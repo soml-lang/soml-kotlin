@@ -1,0 +1,32 @@
+name: Release
+# Run it from the Actions tab after the version bump is pushed to `main`. It publishes the version in `build.gradle.kts` and pushes its `v` tag.
+on: workflow_dispatch
+jobs:
+  release:
+    # Every target publishes, including the Apple and native ones, and only macOS builds them all.
+    runs-on: macos-latest
+    # A release from any other branch would tag a commit that is not on `main`.
+    if: github.ref == 'refs/heads/main'
+    permissions:
+      # For pushing the tag.
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@v6
+      - run: ./gradlew jvmTest
+      # Maven Central has no trusted publishing, so the token and the signing key are secrets. The key is ASCII-armored and read from the environment, so no GnuPG is needed. The configuration cache is off, so that the key is not written to it.
+      - run: ./gradlew nmcpPublishAggregationToCentralPortal --no-configuration-cache
+        env:
+          MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          MAVEN_GPG_KEY: ${{ secrets.MAVEN_GPG_KEY }}
+          MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
+      - name: Tag
+        run: |
+          version="v$(sed -n 's/^version = "\(.*\)"/\1/p' build.gradle.kts)"
+          git tag "$version"
+          git push origin "$version"

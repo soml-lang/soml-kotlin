@@ -1,0 +1,6 @@
+* text=auto eol=lf
+# The conformance cases test exact bytes, including CR and invalid UTF-8, so Git must not convert them.
+src/commonTest/resources/conformance/** -text linguist-vendored
+benchmark/fixtures/** -text linguist-vendored
+*.jar binary
+*.bat text eol=crlf

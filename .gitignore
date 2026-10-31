@@ -1,0 +1,6 @@
+.gradle
+.kotlin
+build
+/benchmark/build
+/.ai-temporary
+/local.properties

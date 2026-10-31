@@ -1,0 +1,57 @@
+name: CI
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  # The minimum Java version, and the newest.
+  test:
+    name: Java ${{ matrix.java }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        java: [21, 27]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java }}
+      - uses: gradle/actions/setup-gradle@v6
+      # The benchmark is not part of the library, so it is only compiled.
+      - run: ./gradlew jvmTest :benchmark:compileKotlin
+  multiplatform:
+    name: ${{ matrix.target }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: jsNodeTest wasmJsNodeTest
+          - os: ubuntu-latest
+            target: linuxX64Test
+          - os: macos-latest
+            target: macosArm64Test
+          - os: windows-latest
+            target: mingwX64Test
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@v6
+      - run: ./gradlew ${{ matrix.target }}
+  # The host tests run on the desktop JVM. The device test APK is built but not run, because an emulator is slow and fragile; run it on a device before a release, as `maintenance.md` says.
+  android:
+    name: Android
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@v6
+      - run: ./gradlew testAndroidHostTest assembleAndroidMain assembleAndroidDeviceTest

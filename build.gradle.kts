@@ -13,7 +13,7 @@ plugins {
 }
 
 group = "sh.soml"
-version = "0.0.0"
+version = "0.0.1"
 
 // The absolute path of the test resources, such as the conformance suite, for the tests on every platform, because the tests on Node.js do not run in the project directory.
 val generateTestPaths by tasks.registering {

@@ -29,7 +29,7 @@ plugins {
 }
 
 dependencies {
-	implementation("sh.soml:soml-kotlin:0.0.0")
+	implementation("sh.soml:soml-kotlin:0.0.1")
 }
 ```
 
